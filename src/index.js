@@ -14,7 +14,19 @@ const queryClient = new QueryClient();
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <MantineProvider withNormalizeCSS withGlobalStyles>
+      <MantineProvider
+        withGlobalStyles
+        withNormalizeCSS
+        theme={{
+          breakpoints: {
+            xs: "30em",
+            sm: "48em",
+            md: "64em",
+            lg: "74em",
+            xl: "90em",
+          },
+        }}
+      >
         <ModalsProvider>
           <Notifications />
           <App />

@@ -103,7 +103,7 @@ function Products() {
         {products
           ? products.map((product) => {
               return (
-                <Grid.Col key={product._id} span={4}>
+                <Grid.Col key={product._id} xs={12} sm={6} lg={4}>
                   <Card withBorder shadow="sm" p="20px">
                     <Title order={5}>{product.name}</Title>
                     <Space h="20px" />
