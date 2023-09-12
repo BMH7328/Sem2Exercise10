@@ -26,6 +26,7 @@ function ProductsEdit() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [image, setImage] = useState("");
+  const [uploading, setUploading] = useState(false);
   const { isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: () => getProduct(id),
@@ -34,6 +35,7 @@ function ProductsEdit() {
       setDescription(data.description);
       setPrice(data.price);
       setCategory(data.category);
+      setImage(data.image);
     },
   });
   const updateMutation = useMutation({
@@ -62,6 +64,7 @@ function ProductsEdit() {
         description: description,
         price: price,
         category: category,
+        image: image,
       }),
     });
   };
@@ -70,8 +73,10 @@ function ProductsEdit() {
     mutationFn: uploadProductImage,
     onSuccess: (data) => {
       setImage(data.image_url);
+      setUploading(false);
     },
     onError: (error) => {
+      setUploading(false);
       notifications.show({
         title: error.response.data.message,
         color: "red",
@@ -81,6 +86,7 @@ function ProductsEdit() {
 
   const handleImageUpload = (files) => {
     uploadMutation.mutate(files[0]);
+    setUploading(true);
   };
 
   return (
@@ -102,7 +108,7 @@ function ProductsEdit() {
         <Space h="20px" />
         <Divider />
         <Space h="20px" />
-        {image !== "" ? (
+        {image && image !== "" ? (
           <>
             <Image src={"http://localhost:5000/" + image} width="100%" />
             <Button color="dark" mt="15px" onClick={() => setImage("")}>
