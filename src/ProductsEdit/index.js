@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState } from "react";
 import {
   Container,
   Title,
   Space,
   Card,
   TextInput,
+  Textarea,
   NumberInput,
   Divider,
   Button,
@@ -14,21 +14,8 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation } from "@tanstack/react-query";
-const getProducts = async (id) => {
-  const response = await axios.get("http://localhost:5000/products/" + id);
-  return response.data;
-};
-const updateProducts = async ({ id, data }) => {
-  const response = await axios({
-    method: "PUT",
-    url: "http://localhost:5000/products/" + id,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    data: data,
-  });
-  return response.data;
-};
+import { getProduct, updateProduct } from "../api/products";
+
 function ProductsEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -38,7 +25,7 @@ function ProductsEdit() {
   const [category, setCategory] = useState("");
   const { isLoading } = useQuery({
     queryKey: ["product", id],
-    queryFn: () => getProducts(id),
+    queryFn: () => getProduct(id),
     onSuccess: (data) => {
       setName(data.name);
       setDescription(data.description);
@@ -47,7 +34,7 @@ function ProductsEdit() {
     },
   });
   const updateMutation = useMutation({
-    mutationFn: updateProducts,
+    mutationFn: updateProduct,
     onSuccess: () => {
       notifications.show({
         title: "Product Edited",
@@ -93,12 +80,13 @@ function ProductsEdit() {
         <Space h="20px" />
         <Divider />
         <Space h="20px" />
-        <TextInput
+        <Textarea
           value={description}
           placeholder="Enter the product description here"
           label="description"
           description="The description of the product"
           withAsterisk
+          minRows={5}
           onChange={(event) => setDescription(event.target.value)}
         />
         <Space h="20px" />
@@ -111,7 +99,7 @@ function ProductsEdit() {
           precision={2}
           description="The price of the product"
           withAsterisk
-          onChange={(event) => setPrice(event.target.value)}
+          onChange={setPrice}
         />
         <Space h="20px" />
         <Divider />
@@ -122,7 +110,7 @@ function ProductsEdit() {
           label="Category"
           description="The category of the product"
           withAsterisk
-          onChange={setCategory}
+          onChange={(event) => setCategory(event.target.value)}
         />
         <Space h="20px" />
         <Button fullWidth onClick={handleUpdateProducts}>

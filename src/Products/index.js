@@ -1,46 +1,106 @@
 import { Title, Grid, Card, Badge, Group, Space, Button } from "@mantine/core";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-
-const fetchProducts = async (category = "") => {
-  const response = await axios.get(
-    "http://localhost:5000/products" +
-      (category !== "" ? "?category=" + category : "")
-  );
-  return response.data; //movie data from express
-};
-
-const deleteProducts = async (product_id = "") => {
-  const response = await axios({
-    method: "DELETE",
-    url: "http://localhost:5000/products/" + product_id,
-  });
-  return response.data;
-};
+import { fetchProducts, deleteProduct } from "../api/products";
 
 function Products() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [currentProducts, setCurrentProducts] = useState([]);
   const [category, setCategory] = useState("");
-
-  const {
-    isLoading,
-    isError,
-    data: products,
-    error,
-  } = useQuery({
-    queryKey: ["products", category],
-    queryFn: () => fetchProducts(category),
+  const [sort, setSort] = useState("");
+  const [perPage, setPerPage] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState([]);
+  const { isLoading, data: products } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => fetchProducts(),
   });
 
+  useEffect(() => {
+    /* 
+      everything here will trigger when 
+        - products is updated OR 
+        - category is changed OR
+        - sort is updated OR
+        - perpage is updated
+    */
+    // method 1:
+    // if (category !== "") {
+    //   const filteredProducts = products.filter((p) => p.category === category);
+    //   setCurrentProducts(filteredProducts);
+    // } else {
+    //   setCurrentProducts(products);
+    // }
+    // method 2:
+    let newList = products ? [...products] : [];
+    // filter by category
+    if (category !== "") {
+      newList = newList.filter((p) => p.category === category);
+    }
+    //get total pages
+    const total = Math.ceil(newList.length / perPage);
+    // convert the total number into array
+    const pages = [];
+    for (let i = 1; i <= total; i++) {
+      pages.push(i);
+    }
+    setTotalPages(pages);
+
+    //sorting
+    switch (sort) {
+      case "name":
+        newList = newList.sort((a, b) => {
+          return a.name.localeCompare(b.name);
+        });
+        break;
+      case "price":
+        newList = newList.sort((a, b) => {
+          return a.price - b.price;
+        });
+        break;
+      default:
+        break;
+    }
+    //pagination
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    /*
+      const start = 0;
+      end = 6;
+      currentPage = 1
+      perPage = 6
+      start = 1-1 * 6 = 0
+      currentPage = 2
+      perPage = 6
+      start = 2-1 * 6 = 6
+      currentPage = 3
+      perPage = 6
+      start = 3-1 * 6 = 12
+    */
+    newList = newList.slice(start, end);
+
+    setCurrentProducts(newList);
+  }, [products, category, sort, perPage, currentPage]);
+
+  const categoryOptions = useMemo(() => {
+    let options = [];
+    if (products && products.length > 0) {
+      products.forEach((product) => {
+        if (!options.includes(product.category)) {
+          options.push(product.category);
+        }
+      });
+    }
+    return options;
+  }, [products]);
+
   const deleteMutation = useMutation({
-    mutationFn: deleteProducts,
+    mutationFn: deleteProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["products", category],
+        queryKey: ["products"],
       });
       notifications.show({
         title: "Product Deleted",
@@ -49,21 +109,6 @@ function Products() {
     },
   });
 
-  //extract genre from movie using useMemo
-  const memoryProducts = queryClient.getQueryData(["products", ""]);
-  const categoryOptions = useMemo(() => {
-    let options = [];
-    //loop through all the movies to get the genre from each movie
-    if (memoryProducts && memoryProducts.length > 0) {
-      memoryProducts.forEach((product) => {
-        //to make sure genre wasnt already in the options
-        if (!options.includes(product.category)) {
-          options.push(product.category);
-        }
-      });
-    }
-    return options;
-  }, [memoryProducts]);
   return (
     <>
       <Space h="20px" />{" "}
@@ -86,6 +131,7 @@ function Products() {
           value={category}
           onChange={(event) => {
             setCategory(event.target.value);
+            setCurrentPage(1);
           }}
         >
           <option value="">All categories</option>
@@ -97,13 +143,35 @@ function Products() {
             );
           })}
         </select>
+        <select
+          value={sort}
+          onChange={(event) => {
+            setSort(event.target.value);
+          }}
+        >
+          <option value="">No Sorting</option>
+          <option value="name">Sort by Name</option>
+          <option value="price">Sort by Price</option>
+        </select>
+        <select
+          value={perPage}
+          onChange={(event) => {
+            setPerPage(parseInt(event.target.value));
+            // reset it back to page 1
+            setCurrentPage(1);
+          }}
+        >
+          <option value="6">6 Per Page</option>
+          <option value="10">10 Per Page</option>
+          <option value={9999999}>All</option>
+        </select>
       </Group>
       <Space h="30px" />
       <Grid>
-        {products
-          ? products.map((product) => {
+        {currentProducts
+          ? currentProducts.map((product) => {
               return (
-                <Grid.Col key={product._id} xs={12} sm={6} lg={4}>
+                <Grid.Col key={product._id} lg={4} md={6} sm={12}>
                   <Card withBorder shadow="sm" p="20px">
                     <Title order={5}>{product.name}</Title>
                     <Space h="20px" />
@@ -113,9 +181,7 @@ function Products() {
                     </Group>
                     <Space h="20px" />
                     <Group position="center" spacing="5px">
-                      <Button fullWidth radius="7px" component={Link}>
-                        Add to Cart
-                      </Button>
+                      <Button fullWidth>Add to Cart</Button>
                     </Group>
                     <Space h="20px" />
                     <Group position="apart">
@@ -145,6 +211,22 @@ function Products() {
             })
           : null}
       </Grid>
+      <Space h="40px" />
+      <div>
+        {totalPages.map((page) => {
+          return (
+            <button
+              key={page}
+              onClick={() => {
+                setCurrentPage(page);
+              }}
+            >
+              {page}
+            </button>
+          );
+        })}
+      </div>
+      <Space h="40px" />
     </>
   );
 }
