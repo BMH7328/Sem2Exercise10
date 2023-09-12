@@ -24,6 +24,20 @@ export const addProduct = async (data) => {
   return response.data;
 };
 
+export const uploadProductImage = async (file) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  const response = await axios({
+    method: "POST",
+    url: API_URL + "/images",
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    data: formData,
+  });
+  return response.data;
+};
+
 export const updateProduct = async ({ id, data }) => {
   const response = await axios({
     method: "PUT",
