@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { fetchProducts, deleteProduct } from "../api/products";
+import { addToCart, getCartItems } from "../api/cart";
 
 function Products() {
   const queryClient = useQueryClient();
@@ -16,6 +17,10 @@ function Products() {
   const { isLoading, data: products } = useQuery({
     queryKey: ["products"],
     queryFn: () => fetchProducts(),
+  });
+  const { data: cart = [] } = useQuery({
+    queryKey: ["cart"],
+    queryFn: getCartItems,
   });
 
   useEffect(() => {
@@ -109,6 +114,19 @@ function Products() {
     },
   });
 
+  const addToCartMutation = useMutation({
+    mutationFn: addToCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+      notifications.show({
+        title: "Product Added to Cart",
+        color: "green",
+      });
+    },
+  });
+
   return (
     <>
       <Space h="20px" />{" "}
@@ -181,7 +199,15 @@ function Products() {
                     </Group>
                     <Space h="20px" />
                     <Group position="center" spacing="5px">
-                      <Button fullWidth>Add to Cart</Button>
+                      <Button
+                        fullWidth
+                        onClick={() => {
+                          addToCartMutation.mutate(product);
+                        }}
+                      >
+                        {" "}
+                        Add To Cart
+                      </Button>
                     </Group>
                     <Space h="20px" />
                     <Group position="apart">
@@ -213,6 +239,13 @@ function Products() {
       </Grid>
       <Space h="40px" />
       <div>
+        <span
+          style={{
+            marginRight: "10px",
+          }}
+        >
+          Page {currentPage} of {totalPages.length}
+        </span>
         {totalPages.map((page) => {
           return (
             <button
