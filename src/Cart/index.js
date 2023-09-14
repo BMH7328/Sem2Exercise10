@@ -1,7 +1,11 @@
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
-import { getCartItems, removeItemFromCart } from "../api/cart";
+import {
+  getCartItems,
+  removeItemFromCart,
+  removeItemsFromCart,
+} from "../api/cart";
 import Header from "../Header";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { notifications } from "@mantine/notifications";
 
 import {
@@ -16,7 +20,6 @@ import {
 } from "@mantine/core";
 
 export default function Cart() {
-  const [list, setList] = useState([]);
   const [checkedList, setCheckedList] = useState([]);
   const [checkAll, setCheckAll] = useState(false);
   const queryClient = useQueryClient();
@@ -43,10 +46,11 @@ export default function Cart() {
     return cart.price * cart.quantity;
   };
 
-  const grandTotal = cart.reduce(
-    (total, cart) => total + calculateTotal(cart),
-    0
-  );
+  //Better Method 2
+  const grandTotal = useMemo(() => {
+    return cart.reduce((total, cart) => total + calculateTotal(cart), 0);
+  }, [cart]);
+
   // console.log(queryClient.getQueryData(["cart"]));
   // console.log(getCartItems());
   // console.log(cart);
@@ -75,6 +79,25 @@ export default function Cart() {
       setCheckedList(newCheckedList);
     }
   };
+
+  const deleteCheckedItems = () => {
+    deleteProductsMutation.mutate(checkedList);
+  };
+
+  const deleteProductsMutation = useMutation({
+    mutationFn: removeItemsFromCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+      notifications.show({
+        title: "Selected Products Deleted",
+        color: "green",
+      });
+      setCheckAll(false);
+      setCheckedList([]);
+    },
+  });
 
   return (
     <>
@@ -137,9 +160,9 @@ export default function Cart() {
                         />
                       </td>
                       <td> {cart.name}</td>
-                      <td>{cart.price}</td>
+                      <td>${cart.price}</td>
                       <td>{cart.quantity}</td>
-                      <td>{calculateTotal(cart)}</td>
+                      <td>${calculateTotal(cart)}</td>
                       <td>
                         <Group position="right">
                           <Button
@@ -165,21 +188,24 @@ export default function Cart() {
               )}
               <tr>
                 <td colSpan="5" className="grand-total-label"></td>
-                <td className="grand-total">{grandTotal}</td>
+                <td className="grand-total">${grandTotal}</td>
               </tr>
             </tbody>
           </Table>
-          <Button
-            variant="danger"
-            size="sm"
-            className="ms-2"
-            disabled={checkedList && checkedList.length > 0 ? false : true}
-            onClick={() => {}}
-          >
-            Delete Selected
-          </Button>
-          <Button>Checkout</Button>
         </Grid>
+      </Group>
+      <Group position="apart">
+        <Button
+          variant="danger"
+          disabled={checkedList && checkedList.length > 0 ? false : true}
+          onClick={(event) => {
+            event.preventDefault();
+            deleteCheckedItems();
+          }}
+        >
+          Delete Selected
+        </Button>
+        <Button>Checkout</Button>
       </Group>
     </>
   );
