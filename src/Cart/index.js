@@ -7,10 +7,9 @@ import {
 import Header from "../Header";
 import { useState, useMemo } from "react";
 import { notifications } from "@mantine/notifications";
-
+import { Link } from "react-router-dom";
 import {
   Table,
-  Title,
   Space,
   Grid,
   Group,
@@ -102,17 +101,12 @@ export default function Cart() {
   return (
     <>
       <Group position="center">
-        <Header />
-      </Group>
-      <Group position="center">
-        <Title order={3} align="center">
-          Cart
-        </Title>
+        <Header title="Cart" page="cart" />
       </Group>
       <Space h="20px" />
       <Group position="center">
         <Grid>
-          <Table>
+          <Table highlightOnHover>
             <thead>
               <tr>
                 <th>
@@ -154,10 +148,21 @@ export default function Cart() {
                         />
                       </td>
                       <td>
-                        <Image
-                          src={"http://localhost:5000/" + cart.image}
-                          width="100px"
-                        />
+                        {cart.image && cart.image !== "" ? (
+                          <>
+                            <Image
+                              src={"http://localhost:5000/" + cart.image}
+                              width="100px"
+                            />
+                          </>
+                        ) : (
+                          <Image
+                            src={
+                              "https://www.aachifoods.com/templates/default-new/images/no-prd.jpg"
+                            }
+                            width="100px"
+                          />
+                        )}
                       </td>
                       <td> {cart.name}</td>
                       <td>${cart.price}</td>
@@ -205,7 +210,13 @@ export default function Cart() {
         >
           Delete Selected
         </Button>
-        <Button>Checkout</Button>
+        <Button
+          component={Link}
+          to="/checkout"
+          disabled={cart.length > 0 ? false : true}
+        >
+          Checkout
+        </Button>
       </Group>
     </>
   );

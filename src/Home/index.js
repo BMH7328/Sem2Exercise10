@@ -7,7 +7,7 @@ function Home() {
     <Container>
       <Space h="50px" />
       <Group position="center">
-        <Header />
+        <Header title="Home" page="home" />
       </Group>
       <Space h="30px" />
       <Space h="30px" />

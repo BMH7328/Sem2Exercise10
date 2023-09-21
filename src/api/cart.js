@@ -4,6 +4,11 @@ export const getCartItems = () => {
   return cart ? cart : [];
 };
 
+// clear all the cart items
+export const clearCartItems = () => {
+  localStorage.removeItem("cart");
+};
+
 // add product to cart
 export const addToCart = (product) => {
   // get all the items from the current cart
@@ -13,6 +18,7 @@ export const addToCart = (product) => {
   // if product exists, increase the quantity
   if (existing_product) {
     existing_product.quantity++;
+    // existing_product.quantity = existing_product.quantity + 1;
   } else {
     // product doesn't exists, add it to cart
     cart.push({
@@ -26,15 +32,11 @@ export const addToCart = (product) => {
 };
 
 // remove product from cart
-export const removeItemFromCart = (id) => {
+export const removeItemFromCart = (product_id) => {
   const cart = getCartItems();
-  const newList = cart.filter((c) => {
-    if (id === c._id) {
-      return false;
-    }
-    return true;
-  });
-  localStorage.setItem("cart", JSON.stringify(newList));
+  const deleteCart = cart.filter((c) => c._id !== product_id);
+
+  localStorage.setItem("cart", JSON.stringify(deleteCart));
 };
 
 // remove multiple products from cart
