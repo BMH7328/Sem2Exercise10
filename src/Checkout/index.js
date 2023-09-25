@@ -19,6 +19,7 @@ import { createOrder } from "../api/order";
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const { data: cart = [] } = useQuery({
@@ -34,11 +35,11 @@ export default function Checkout() {
 
   const createOrderMutation = useMutation({
     mutationFn: createOrder,
-    onSuccess: () => {
-      // 3. redirect the customer to payment gateway
-      // redirect to My Orders page
-      navigate("/orders");
+    onSuccess: (data) => {
+      // clear the cart
       clearCartItems();
+      // 3. redirect the customer to payment gateway
+      window.location = data.url;
     },
     onError: (error) => {
       // when this is an error in API call
@@ -69,9 +70,19 @@ export default function Checkout() {
           customerName: name,
           customerEmail: email,
           products: cart.map((i) => i._id),
+          description: cart.map((i) => i.name).join(", "),
           totalPrice: calculateTotal(),
         })
       );
+      /*
+        [
+          { name: '1' },
+          { name: '2; }
+        ]
+        [ '1' , '2' ]
+        1, 2
+      */
+      setLoading(true);
     }
   };
 
@@ -96,7 +107,7 @@ export default function Checkout() {
 
           <TextInput
             value={email}
-            placeholder="email address"
+            placeholder="Email address"
             label="Email"
             required
             onChange={(event) => setEmail(event.target.value)}
@@ -104,6 +115,7 @@ export default function Checkout() {
           <Space h="20px" />
 
           <Button
+            loading={loading}
             fullWidth
             onClick={() => {
               doCheckout();

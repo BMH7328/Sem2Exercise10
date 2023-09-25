@@ -6,6 +6,7 @@ import ProductsEdit from "./ProductsEdit";
 import Cart from "./Cart";
 import Checkout from "./Checkout";
 import Orders from "./Orders";
+import PaymentVerification from "./PaymentVerification";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/verify-payment" element={<PaymentVerification />} />
       </Routes>
     </Router>
   );
