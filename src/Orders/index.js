@@ -135,15 +135,17 @@ export default function Orders() {
                       </td>
                       <td width={"500px"}>{o.paid_at}</td>
                       <td width={"200px"}>
-                        <Button
-                          variant="outline"
-                          color="red"
-                          onClick={() => {
-                            deleteMutation.mutate(o._id);
-                          }}
-                        >
-                          Delete
-                        </Button>
+                        {o.status == "Pending" && (
+                          <Button
+                            variant="outline"
+                            color="red"
+                            onClick={() => {
+                              deleteMutation.mutate(o._id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   );
