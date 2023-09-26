@@ -18,3 +18,28 @@ export const fetchOrders = async () => {
   const response = await axios.get(API_URL + "/orders");
   return response.data;
 };
+
+export const updateStatus = async ({ id, data }) => {
+  const response = await axios({
+    method: "PUT",
+    url: API_URL + "/orders/" + id,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: data,
+  });
+  return response.data;
+};
+
+export const getOrder = async (id) => {
+  const response = await axios.get(API_URL + "/orders/" + id);
+  return response.data;
+};
+
+export const deleteOrders = async (order_id = "") => {
+  const response = await axios({
+    method: "DELETE",
+    url: API_URL + "/orders/" + order_id,
+  });
+  return response.data;
+};
