@@ -130,7 +130,17 @@ export default function Orders() {
                           w="150px"
                           placeholder={o.status}
                           disabled={o.status == "Pending" ? true : false}
-                          data={["Paid", "Failed", "Shipped", "Delivered"]}
+                          data={[
+                            {
+                              value: "pending",
+                              label: "Pending",
+                              disabled: true,
+                            },
+                            { value: "paid", label: "Paid" },
+                            { value: "failed", label: "Failed" },
+                            { value: "shipped", label: "Shipped" },
+                            { value: "delivered", label: "Delivered" },
+                          ]}
                         />
                       </td>
                       <td width={"500px"}>{o.paid_at}</td>
