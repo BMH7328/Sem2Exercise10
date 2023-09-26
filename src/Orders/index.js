@@ -1,35 +1,29 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Container, Table, Button, Space, Image, Select } from "@mantine/core";
+import {
+  Container,
+  Table,
+  Button,
+  Space,
+  Image,
+  Select,
+  Group,
+  LoadingOverlay,
+} from "@mantine/core";
 import { Link } from "react-router-dom";
 import Header from "../Header";
-import {
-  fetchOrders,
-  getOrder,
-  updateStatus,
-  deleteOrders,
-} from "../api/order";
+import { fetchOrders, updateOrders, deleteOrders } from "../api/order";
 import { notifications } from "@mantine/notifications";
 
 export default function Orders() {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState("");
-  const { data: orders = [] } = useQuery({
+  const { isLoading, data: orders = [] } = useQuery({
     queryKey: ["orders"],
     queryFn: fetchOrders,
   });
-  console.log(orders);
-
-  const { isLoading } = useQuery({
-    queryKey: ["orders", orders._id],
-    queryFn: () => getOrder(orders._id),
-    onSuccess: (data) => {
-      setStatus(data.status);
-    },
-  });
 
   const updateMutation = useMutation({
-    mutationFn: updateStatus,
+    mutationFn: updateOrders,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["orders"],
@@ -70,14 +64,15 @@ export default function Orders() {
   });
   return (
     <>
-      <Container>
+      <Container size="100%">
         <Header title="My Orders" page="orders" />
         <Space h="35px" />
+        <LoadingOverlay visible={isLoading} />
         <Table>
           <thead>
             <tr>
               <th>Customers</th>
-              <th colSpan={2}>Products</th>
+              <th>Products</th>
               <th>Total Amount</th>
               <th>Status</th>
               <th>Payment Date</th>
@@ -93,34 +88,39 @@ export default function Orders() {
                         {o.customerName}
                         <br />({o.customerEmail})
                       </td>
-                      <td width={"300px"}>
+                      <td width={"1000px"}>
                         {o.products.map((product, index) => (
                           <div key={index}>
-                            {product.image && product.image !== "" ? (
-                              <>
+                            <Group>
+                              {product.image && product.image !== "" ? (
+                                <>
+                                  <Image
+                                    src={
+                                      "http://localhost:5000/" + product.image
+                                    }
+                                    width="100px"
+                                  />
+                                </>
+                              ) : (
                                 <Image
-                                  src={"http://localhost:5000/" + product.image}
+                                  src={
+                                    "https://www.aachifoods.com/templates/default-new/images/no-prd.jpg"
+                                  }
                                   width="100px"
                                 />
-                              </>
-                            ) : (
-                              <Image
-                                src={
-                                  "https://www.aachifoods.com/templates/default-new/images/no-prd.jpg"
-                                }
-                                width="100px"
-                              />
-                            )}
+                              )}
+                              <p>{product.name}</p>
+                            </Group>
                           </div>
                         ))}
                       </td>
-                      <td width={"700px"}>
+                      {/* <td width={"700px"}>
                         {o.products.map((product, index) => (
                           <div key={index}>
                             <p>{product.name}</p>
                           </div>
                         ))}
-                      </td>
+                      </td> */}
                       <td width={"400px"}>{o.totalPrice}</td>
                       <td width={"500px"}>
                         <Select
@@ -161,10 +161,12 @@ export default function Orders() {
                 })
               : null}
           </tbody>
+        </Table>
+        <Group position="center">
           <Button component={Link} to="/">
             Continue Shopping
           </Button>
-        </Table>
+        </Group>
       </Container>
     </>
   );

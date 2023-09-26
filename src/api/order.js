@@ -19,7 +19,7 @@ export const fetchOrders = async () => {
   return response.data;
 };
 
-export const updateStatus = async ({ id, data }) => {
+export const updateOrders = async ({ id, data }) => {
   const response = await axios({
     method: "PUT",
     url: API_URL + "/orders/" + id,
@@ -28,11 +28,6 @@ export const updateStatus = async ({ id, data }) => {
     },
     data: data,
   });
-  return response.data;
-};
-
-export const getOrder = async (id) => {
-  const response = await axios.get(API_URL + "/orders/" + id);
   return response.data;
 };
 
