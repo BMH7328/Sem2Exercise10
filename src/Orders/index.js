@@ -77,8 +77,7 @@ export default function Orders() {
           <thead>
             <tr>
               <th>Customers</th>
-              <th>Products</th>
-              <th></th>
+              <th colSpan={2}>Products</th>
               <th>Total Amount</th>
               <th>Status</th>
               <th>Payment Date</th>
@@ -115,14 +114,14 @@ export default function Orders() {
                           </div>
                         ))}
                       </td>
-                      <td width={"500px"}>
+                      <td width={"700px"}>
                         {o.products.map((product, index) => (
                           <div key={index}>
                             <p>{product.name}</p>
                           </div>
                         ))}
                       </td>
-                      <td width={"500px"}>{o.totalPrice}</td>
+                      <td width={"400px"}>{o.totalPrice}</td>
                       <td width={"500px"}>
                         <Select
                           value={o.status}
@@ -132,20 +131,20 @@ export default function Orders() {
                           disabled={o.status == "Pending" ? true : false}
                           data={[
                             {
-                              value: "pending",
+                              value: "Pending",
                               label: "Pending",
                               disabled: true,
                             },
-                            { value: "paid", label: "Paid" },
-                            { value: "failed", label: "Failed" },
-                            { value: "shipped", label: "Shipped" },
-                            { value: "delivered", label: "Delivered" },
+                            { value: "Paid", label: "Paid" },
+                            { value: "Failed", label: "Failed" },
+                            { value: "Shipped", label: "Shipped" },
+                            { value: "Delivered", label: "Delivered" },
                           ]}
                         />
                       </td>
                       <td width={"500px"}>{o.paid_at}</td>
                       <td width={"200px"}>
-                        {o.status == "Pending" && (
+                        {o.status == "Failed" && "Pending" && (
                           <Button
                             variant="outline"
                             color="red"
