@@ -115,15 +115,15 @@ export default function Orders() {
                           </div>
                         ))}
                       </td>
-                      <td>
+                      <td width={"500px"}>
                         {o.products.map((product, index) => (
                           <div key={index}>
                             <p>{product.name}</p>
                           </div>
                         ))}
                       </td>
-                      <td width={"300px"}>{o.totalPrice}</td>
-                      <td>
+                      <td width={"500px"}>{o.totalPrice}</td>
+                      <td width={"500px"}>
                         <Select
                           value={o.status}
                           onChange={(payment) => handleUpdateStatus(o, payment)}
