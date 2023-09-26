@@ -136,9 +136,8 @@ export default function Orders() {
                       <td width={"500px"}>{o.paid_at}</td>
                       <td width={"200px"}>
                         <Button
+                          variant="outline"
                           color="red"
-                          size="xs"
-                          radius="5px"
                           onClick={() => {
                             deleteMutation.mutate(o._id);
                           }}
