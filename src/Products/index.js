@@ -1,13 +1,25 @@
-import { Title, Grid, Card, Badge, Group, Space, Button } from "@mantine/core";
-import { Link } from "react-router-dom";
+import {
+  Title,
+  Grid,
+  Card,
+  Badge,
+  Group,
+  Space,
+  Button,
+  LoadingOverlay,
+} from "@mantine/core";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { fetchProducts, deleteProduct } from "../api/products";
 import { addToCart, getCartItems } from "../api/cart";
+import { useCookies } from "react-cookie";
 
 function Products() {
+  const [cookies] = useCookies(["currentUser"]);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [currentProducts, setCurrentProducts] = useState([]);
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("");
@@ -22,6 +34,14 @@ function Products() {
     queryKey: ["cart"],
     queryFn: getCartItems,
   });
+
+  const isAdmin = useMemo(() => {
+    return cookies &&
+      cookies.currentUser &&
+      cookies.currentUser.role === "admin"
+      ? true
+      : false;
+  }, [cookies]);
 
   useEffect(() => {
     /* 
@@ -134,14 +154,16 @@ function Products() {
         <Title order={3} align="center">
           Products
         </Title>
-        <Button
-          component={Link}
-          to="/products_add"
-          variant="gradient"
-          gradient={{ from: "yellow", to: "purple", deg: 105 }}
-        >
-          Add New
-        </Button>
+        {isAdmin && (
+          <Button
+            component={Link}
+            to="/products_add"
+            variant="gradient"
+            gradient={{ from: "yellow", to: "purple", deg: 105 }}
+          >
+            Add New
+          </Button>
+        )}
       </Group>
       <Space h="20px" />
       <Group>
@@ -152,7 +174,7 @@ function Products() {
             setCurrentPage(1);
           }}
         >
-          <option value="">All categories</option>
+          <option value="">All Category</option>
           {categoryOptions.map((category) => {
             return (
               <option key={category} value={category}>
@@ -165,6 +187,7 @@ function Products() {
           value={sort}
           onChange={(event) => {
             setSort(event.target.value);
+            setCurrentPage(1);
           }}
         >
           <option value="">No Sorting</option>
@@ -184,53 +207,77 @@ function Products() {
           <option value={9999999}>All</option>
         </select>
       </Group>
-      <Space h="30px" />
+      <Space h="20px" />
+      <LoadingOverlay visible={isLoading} />
       <Grid>
         {currentProducts
           ? currentProducts.map((product) => {
               return (
-                <Grid.Col key={product._id} lg={4} md={6} sm={12}>
+                <Grid.Col key={product._id} lg={4} md={6} sm={6} xs={6}>
                   <Card withBorder shadow="sm" p="20px">
                     <Title order={5}>{product.name}</Title>
                     <Space h="20px" />
                     <Group position="apart" spacing="5px">
-                      <Badge color="green">{product.price}</Badge>
+                      <Badge color="green">${product.price}</Badge>
                       <Badge color="yellow">{product.category}</Badge>
                     </Group>
                     <Space h="20px" />
-                    <Group position="center" spacing="5px">
-                      <Button
-                        fullWidth
-                        onClick={() => {
+                    <Button
+                      fullWidth
+                      onClick={() => {
+                        // pop a messsage if user is not logged in
+                        if (cookies && cookies.currentUser) {
                           addToCartMutation.mutate(product);
-                        }}
-                      >
-                        {" "}
-                        Add To Cart
-                      </Button>
-                    </Group>
-                    <Space h="20px" />
-                    <Group position="apart">
-                      <Button
-                        component={Link}
-                        to={"/products/" + product._id}
-                        color="blue"
-                        size="xs"
-                        radius="50px"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        color="red"
-                        size="xs"
-                        radius="50px"
-                        onClick={() => {
-                          deleteMutation.mutate(product._id);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </Group>
+                        } else {
+                          notifications.show({
+                            title: "Please login to proceed",
+                            message: (
+                              <>
+                                <Button
+                                  color="red"
+                                  onClick={() => {
+                                    navigate("/login");
+                                    notifications.clean();
+                                  }}
+                                >
+                                  Click here to login
+                                </Button>
+                              </>
+                            ),
+                            color: "red",
+                          });
+                        }
+                      }}
+                    >
+                      {" "}
+                      Add To Cart
+                    </Button>
+                    {isAdmin && (
+                      <>
+                        <Space h="20px" />
+                        <Group position="apart">
+                          <Button
+                            component={Link}
+                            to={"/products/" + product._id}
+                            color="blue"
+                            size="xs"
+                            radius="50px"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            color="red"
+                            size="xs"
+                            radius="50px"
+                            onClick={() => {
+                              deleteMutation.mutate(product._id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </Group>
+                      </>
+                    )}
                   </Card>
                 </Grid.Col>
               );

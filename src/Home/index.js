@@ -6,12 +6,8 @@ function Home() {
   return (
     <Container>
       <Space h="50px" />
-      <Group position="center">
-        <Header title="Home" page="home" />
-      </Group>
+      <Header title="Home" page="home" />
       <Space h="30px" />
-      <Space h="30px" />
-      {/* list all the movies here */}
       <Products />
       <Space h="30px" />
     </Container>

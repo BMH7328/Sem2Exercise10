@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Container,
   Table,
@@ -14,13 +14,24 @@ import { Link } from "react-router-dom";
 import Header from "../Header";
 import { fetchOrders, updateOrders, deleteOrders } from "../api/order";
 import { notifications } from "@mantine/notifications";
+import { useCookies } from "react-cookie";
 
 export default function Orders() {
+  const [cookies] = useCookies(["currentUser"]);
+  const { currentUser } = cookies;
   const queryClient = useQueryClient();
   const { isLoading, data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: fetchOrders,
+    queryFn: () => fetchOrders(currentUser ? currentUser.token : ""),
   });
+
+  const isAdmin = useMemo(() => {
+    return cookies &&
+      cookies.currentUser &&
+      cookies.currentUser.role === "admin"
+      ? true
+      : false;
+  }, [cookies]);
 
   const updateMutation = useMutation({
     mutationFn: updateOrders,
@@ -41,15 +52,6 @@ export default function Orders() {
     },
   });
 
-  const handleUpdateStatus = async (order, payment) => {
-    updateMutation.mutate({
-      id: order._id,
-      data: JSON.stringify({
-        status: payment,
-      }),
-    });
-  };
-
   const deleteMutation = useMutation({
     mutationFn: deleteOrders,
     onSuccess: () => {
@@ -65,9 +67,10 @@ export default function Orders() {
   return (
     <>
       <Container size="100%">
+        <Space h="50px" />
         <Header title="My Orders" page="orders" />
         <Space h="35px" />
-        <LoadingOverlay visible={isLoading} />
+        {/* <LoadingOverlay visible={isLoading} /> */}
         <Table>
           <thead>
             <tr>
@@ -125,10 +128,9 @@ export default function Orders() {
                       <td width={"500px"}>
                         <Select
                           value={o.status}
-                          onChange={(payment) => handleUpdateStatus(o, payment)}
-                          w="150px"
-                          placeholder={o.status}
-                          disabled={o.status == "Pending" ? true : false}
+                          disabled={
+                            o.status === "Pending" || !isAdmin ? true : false
+                          }
                           data={[
                             {
                               value: "Pending",
@@ -140,16 +142,28 @@ export default function Orders() {
                             { value: "Shipped", label: "Shipped" },
                             { value: "Delivered", label: "Delivered" },
                           ]}
+                          onChange={(newValue) => {
+                            updateMutation.mutate({
+                              id: o._id,
+                              data: JSON.stringify({
+                                status: newValue,
+                              }),
+                              token: currentUser ? currentUser.token : "",
+                            });
+                          }}
                         />
                       </td>
                       <td width={"500px"}>{o.paid_at}</td>
                       <td width={"200px"}>
-                        {o.status == "Failed" && "Pending" && (
+                        {o.status === "Pending" && isAdmin && (
                           <Button
                             variant="outline"
                             color="red"
                             onClick={() => {
-                              deleteMutation.mutate(o._id);
+                              deleteMutation.mutate({
+                                id: o._id,
+                                token: currentUser ? currentUser.token : "",
+                              });
                             }}
                           >
                             Delete

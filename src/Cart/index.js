@@ -102,9 +102,8 @@ export default function Cart() {
   return (
     <>
       <Container>
-        <Group position="center">
-          <Header title="Cart" page="cart" />
-        </Group>
+        <Space h="50px" />
+        <Header title="Cart" page="cart" />
         <Space h="20px" />
         <Group position="center">
           <Grid>
