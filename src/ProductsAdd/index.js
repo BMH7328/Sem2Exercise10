@@ -48,15 +48,16 @@ function ProductsAdd() {
 
   const handleAddNewProducts = async (event) => {
     event.preventDefault();
-    createMutation.mutate(
-      JSON.stringify({
+    createMutation.mutate({
+      data: JSON.stringify({
         name: name,
         description: description,
         price: price,
         category: category,
         image: image,
-      })
-    );
+      }),
+      token: currentUser ? currentUser.token : "",
+    });
   };
 
   const uploadMutation = useMutation({
