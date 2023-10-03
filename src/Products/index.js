@@ -18,6 +18,7 @@ import { useCookies } from "react-cookie";
 
 function Products() {
   const [cookies] = useCookies(["currentUser"]);
+  const { currentUser } = cookies;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [currentProducts, setCurrentProducts] = useState([]);
@@ -28,7 +29,7 @@ function Products() {
   const [totalPages, setTotalPages] = useState([]);
   const { isLoading, data: products } = useQuery({
     queryKey: ["products"],
-    queryFn: () => fetchProducts(),
+    queryFn: () => fetchProducts(currentUser ? currentUser.token : ""),
   });
   const { data: cart = [] } = useQuery({
     queryKey: ["cart"],
@@ -270,7 +271,10 @@ function Products() {
                             size="xs"
                             radius="50px"
                             onClick={() => {
-                              deleteMutation.mutate(product._id);
+                              deleteMutation.mutate({
+                                id: product._id,
+                                token: currentUser ? currentUser.token : "",
+                              });
                             }}
                           >
                             Delete

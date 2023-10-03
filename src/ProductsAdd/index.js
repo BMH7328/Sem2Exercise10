@@ -16,8 +16,11 @@ import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { addProduct, uploadProductImage } from "../api/products";
+import { useCookies } from "react-cookie";
 
 function ProductsAdd() {
+  const [cookies] = useCookies(["currentUser"]);
+  const { currentUser } = cookies;
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
